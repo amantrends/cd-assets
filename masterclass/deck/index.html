@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FactoHolic YT Masterclass</title>
+<style>
+@font-face{font-family:'Bebas Neue';font-weight:400;src:url(assets/fonts/BebasNeue-400.woff2) format('woff2')}
+@font-face{font-family:'Anton';font-weight:400;src:url(assets/fonts/Anton-400.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:400;src:url(assets/fonts/Inter-400.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:600;src:url(assets/fonts/Inter-600.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:800;src:url(assets/fonts/Inter-800.woff2) format('woff2')}
+
+:root{--bg:#0a0a0a;--ink:#f4f1ea;--mute:#8e8a84;--dim:#4a4744;--line:#262423;--red:#ff0000;--red2:#c4000b;--gold:#ffc23d;--blue:#3ea6ff;
+  --disp:'Bebas Neue',Impact,sans-serif;--num:'Anton',Impact,sans-serif;--body:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;color:var(--ink);font-family:var(--body);overflow:hidden}
+#view{position:fixed;inset:0;display:grid;place-items:center}
+#stage{width:1920px;height:1080px;position:relative;transform-origin:center;background:var(--bg);overflow:hidden}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s .6s;overflow:hidden;background:var(--bg)}
+.slide.active{opacity:1;visibility:visible;transition:opacity .6s ease}
+img{display:block}
+
+/* film grain + vignette over everything */
+#grain{position:absolute;inset:-50%;pointer-events:none;z-index:50;opacity:.09;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation:grain .6s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+#vig{position:absolute;inset:0;pointer-events:none;z-index:49;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+
+/* entrance animations: replay every time a slide becomes active */
+.slide.active .in{animation:rise .9s cubic-bezier(.2,.8,.2,1) var(--d,0s) both}
+.slide.active .pop{animation:pop .7s cubic-bezier(.3,1.4,.5,1) var(--d,0s) both}
+.slide.active .fade{animation:fade 1.2s ease var(--d,0s) both}
+.slide.active .wipe{animation:wipe 1s cubic-bezier(.7,0,.2,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes wipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+
+/* shared type */
+.kicker{font:600 22px/1 var(--body);letter-spacing:.32em;text-transform:uppercase;color:var(--red)}
+.h{font:400 112px/.92 var(--disp);letter-spacing:.01em}
+.h em{font-style:normal;color:var(--red)}
+.sub{font:400 30px/1.4 var(--body);color:#cfcac2;max-width:900px}
+.small{font:400 18px/1.4 var(--body);color:var(--mute)}
+.pad{position:absolute;left:120px;top:110px}
+.hold{position:absolute;right:40px;top:36px;z-index:40;font:800 16px/1 var(--body);letter-spacing:.2em;background:var(--gold);color:#000;padding:10px 14px;border-radius:6px}
+
+/* bottom YouTube scrubber */
+#chrome{position:absolute;left:0;right:0;bottom:0;height:86px;z-index:45;padding:0 64px;display:flex;flex-direction:column;justify-content:center;gap:12px;
+  background:linear-gradient(transparent,rgba(0,0,0,.85));transition:opacity .5s}
+#chrome.hide{opacity:0}
+#bar{display:flex;gap:4px;height:5px}
+#bar .seg{flex:var(--w);background:rgba(255,255,255,.22);position:relative;border-radius:2px;overflow:hidden}
+#bar .seg i{position:absolute;inset:0;background:var(--red);transform-origin:left;transform:scaleX(var(--p,0));transition:transform .6s}
+#meta{display:flex;justify-content:space-between;font:600 18px/1 var(--body);color:#ddd}
+#meta b{color:var(--red);font-weight:800;margin-right:10px}
+#brand{position:absolute;left:64px;top:40px;z-index:45;font:400 28px/1 var(--disp);letter-spacing:.12em;display:flex;align-items:center;gap:12px;transition:opacity .5s}
+#brand.hide{opacity:0}
+.yt{display:inline-block;width:42px;height:30px;background:var(--red);border-radius:9px;position:relative}
+.yt:after{content:'';position:absolute;left:16px;top:8px;border-left:13px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent}
+
+/* thumbnails */
+.th{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+
+/* ---------- 1 cold open ---------- */
+.cold{display:grid;place-items:center;text-align:center}
+.cold .logo{width:220px;height:156px;border-radius:44px;background:var(--red);position:absolute;left:850px;top:462px;opacity:0}
+.cold .logo:after{content:'';position:absolute;left:84px;top:44px;border-left:68px solid #fff;border-top:34px solid transparent;border-bottom:34px solid transparent}
+.slide.active .cold-logo{animation:tadum 2.1s ease both}
+@keyframes tadum{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1)}70%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(9)}}
+.cold .count{font:400 210px/1 var(--num);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.cold .lbl{font:600 30px/1 var(--body);letter-spacing:.3em;text-transform:uppercase;color:var(--mute);margin-top:30px}
+.cold .orig{font:400 46px/1 var(--disp);letter-spacing:.5em;color:var(--red);margin-top:90px}
+.cold .src{position:absolute;bottom:40px;left:0;right:0}
+
+/* ---------- 2 title / showroom strip ---------- */
+.ttl .strip{position:absolute;left:652px;width:250px;top:0;bottom:0;overflow:hidden}
+.ttl .reel{display:flex;flex-direction:column;gap:26px;animation:reel 52s linear infinite}
+@keyframes reel{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+.ttl .reel div{height:333px;border-radius:30px;border-left:12px solid var(--c);border-right:12px solid var(--c);overflow:hidden;flex:none}
+.ttl .frame{position:absolute;left:640px;top:367px;width:274px;height:357px;border:12px solid var(--red);border-radius:38px;z-index:3;box-shadow:0 0 80px rgba(255,0,0,.45)}
+.ttl .w{position:absolute;top:400px;font:400 320px/.94 var(--disp);letter-spacing:-.005em;z-index:2}
+.ttl .w1{right:1290px;text-align:right}
+.ttl .w2{left:924px}
+.ttl .side{position:absolute;left:1560px;top:380px;width:310px}
+.ttl .side h2{font:400 72px/.92 var(--disp)}
+.ttl .side p{font:400 22px/1.4 var(--body);color:#cfcac2;margin:20px 0 34px}
+.play{display:inline-flex;align-items:center;gap:16px;background:var(--ink);color:#000;font:800 26px/1 var(--body);padding:20px 36px;border-radius:10px}
+.play:before{content:'';border-left:20px solid #000;border-top:12px solid transparent;border-bottom:12px solid transparent}
+.ttl .top{position:absolute;left:150px;top:300px;font:400 40px/1 var(--disp);letter-spacing:.2em;color:var(--red)}
+
+/* ---------- 3 episodes ---------- */
+.eps .head{position:absolute;left:120px;top:110px;display:flex;align-items:baseline;gap:40px}
+.eps .grid{position:absolute;left:120px;right:120px;top:240px;display:grid;grid-template-columns:1fr 1fr;gap:18px 60px}
+.ep{display:grid;grid-template-columns:56px 240px 1fr;gap:24px;align-items:center;padding:14px;border-radius:14px;background:rgba(255,255,255,.03)}
+.ep.now{background:rgba(255,255,255,.09)}
+.ep .n{font:400 60px/1 var(--num);color:var(--dim)}
+.ep.now .n{color:var(--ink)}
+.ep .pic{height:140px;border-radius:10px;overflow:hidden;position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.ep .pic img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.ep .pb{position:absolute;left:0;bottom:0;height:6px;width:100%;background:rgba(255,255,255,.3);z-index:2}
+.ep .pb i{display:block;height:100%;width:35%;background:var(--red)}
+.ep h3{font:400 46px/1 var(--disp);letter-spacing:.02em}
+.ep p{font:400 20px/1.4 var(--body);color:#bdb8b0;margin-top:8px}
+
+/* ---------- 4 wall of Shorts ---------- */
+.wallx .mosaic{position:absolute;left:-12px;top:-30px;display:grid;grid-template-columns:repeat(20,97px);gap:0}
+.wallx .mosaic div{height:129px;padding:3px;transition:opacity .8s,filter .8s}
+.wallx .mosaic img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.slide.active .mosaic div{animation:tile .5s cubic-bezier(.3,1.4,.5,1) var(--d) both}
+@keyframes tile{from{opacity:0;transform:scale(.4) rotate(var(--r))}}
+.wallx.lit .mosaic div{opacity:.28;filter:grayscale(1)}
+html.print .wallx.lit .mosaic div:not(.hit){filter:none;opacity:.22}  /* grayscale filter makes Chrome rasterise the page: +14 MB PDF */
+.wallx.lit .mosaic div.hit{opacity:1;filter:none}
+.wallx.lit .mosaic div.hit img{outline:5px solid var(--red);outline-offset:-5px;box-shadow:0 0 30px rgba(255,0,0,.7)}
+.wcard{position:absolute;left:660px;top:300px;width:600px;height:460px;background:#000;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 30px 120px #000}
+.wcard .big{font:400 190px/.9 var(--num);margin-top:18px}
+.wcard .t{font:400 64px/1 var(--disp);letter-spacing:.12em}
+.wcard p{font:400 24px/1.45 var(--body);color:#cfcac2;margin-top:24px}
+.wcard p b{color:var(--red)}
+
+/* ---------- stat tiles ---------- */
+.tiles{position:absolute;left:120px;right:120px;top:420px;display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.tile{background:#151413;border:1px solid var(--line);border-radius:22px;padding:44px 38px 40px;position:relative;overflow:hidden}
+.tile:before{content:'';position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--red)}
+.tile .v{font:400 128px/1 var(--num);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.tile .v small{font-size:.55em}
+.tile .k{font:600 24px/1.3 var(--body);color:#cfcac2;margin-top:18px}
+.foot{position:absolute;left:120px;bottom:120px}
+
+/* ---------- timeline ---------- */
+.tl{position:absolute;left:120px;right:120px;top:400px;height:440px}
+.tl .cols{position:absolute;inset:0 0 70px 0;display:grid;grid-template-columns:repeat(6,1fr);gap:40px;align-items:end}
+.tl .col{display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%}
+.tl .b{width:100%;background:var(--red);border-radius:10px 10px 0 0;height:calc(var(--n) * 18px);transform-origin:bottom}
+.slide.active .tl .b{animation:grow 1s cubic-bezier(.2,.8,.2,1) var(--d,0s) both}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+.tl .c{font:400 64px/1 var(--num);margin-bottom:12px}
+.tl .zero .c{color:var(--dim)}
+.tl .axis{position:absolute;left:0;right:0;bottom:0;height:70px;border-top:3px solid #3a3836;display:grid;grid-template-columns:repeat(6,1fr);gap:40px}
+.tl .axis div{text-align:center;font:400 44px/70px var(--disp);color:#cfcac2}
+.flag{position:absolute;font:600 22px/1.3 var(--body);color:var(--ink);padding-left:22px;border-left:4px solid var(--gold)}
+.flag b{display:block;font:400 38px/1 var(--disp);color:var(--gold);letter-spacing:.03em}
+
+/* ---------- hall of fame (VHS fan) ---------- */
+.hof .tape{position:absolute;width:176px;height:262px;background:#0d0d0d;border:2px solid #2b2b2b;border-radius:6px;padding:9px 9px 34px;box-shadow:0 18px 40px rgba(0,0,0,.7)}
+.hof .tape img{width:100%;height:100%;object-fit:cover}
+.hof .tape span{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:space-between;font:400 20px/1 var(--disp);letter-spacing:.06em;color:#ddd}
+.hof .tape span b{color:var(--red);font-weight:400}
+.slide.active .hof-t{animation:fly .9s cubic-bezier(.2,.9,.3,1) var(--d) both}
+@keyframes fly{from{opacity:0;transform:translate(var(--fx),var(--fy)) rotate(0) scale(.3)}to{opacity:1}}
+.hof .center{position:absolute;left:740px;top:300px;width:440px;height:440px;background:#000;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.9)}
+.hof .center .big{font:400 150px/.9 var(--num)}
+.hof .center .t{font:400 52px/1 var(--disp);letter-spacing:.04em;margin-top:8px}
+.hof .center .s{font:600 17px/1.4 var(--body);color:var(--mute);margin-top:22px;letter-spacing:.08em;text-transform:uppercase}
+
+/* ---------- disclaimer ---------- */
+.rate{position:absolute;left:120px;top:330px;display:flex;gap:40px;align-items:stretch}
+.rate .bar{width:10px;background:var(--red)}
+.rate .box{border:4px solid var(--ink);padding:14px 22px;font:400 64px/1 var(--disp);width:fit-content}
+.rate h2{font:400 96px/1 var(--disp)}
+.rate p{font:400 32px/1.45 var(--body);color:#cfcac2;max-width:1100px;margin-top:22px}
+.ph{color:var(--gold);border:2px dashed var(--gold);padding:18px 24px;border-radius:10px;display:inline-block}
+
+/* ---------- chapter cards ---------- */
+.chap .wall{position:absolute;inset:-120px;display:grid;grid-template-columns:repeat(12,1fr);gap:14px;opacity:.5;transform:rotate(-6deg)}
+.slide.active .chap-wall{animation:pan 14s linear both}
+@keyframes pan{from{transform:rotate(-6deg) translateX(0)}to{transform:rotate(-6deg) translateX(-140px)}}
+.chap .wall div{aspect-ratio:3/4;border-radius:12px;overflow:hidden}
+.chap .shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,10,10,.97) 25%,rgba(10,10,10,.55))}
+.chap .lb{position:absolute;left:0;right:0;height:110px;background:#000;z-index:3}
+.slide.active .chap-lb1{animation:lb1 1s ease both}.slide.active .chap-lb2{animation:lb2 1s ease both}
+.chap .lb1{top:0}.chap .lb2{bottom:0}
+@keyframes lb1{from{transform:translateY(-100%)}}@keyframes lb2{from{transform:translateY(100%)}}
+.chap .num{position:absolute;right:90px;top:120px;font:400 760px/1 var(--num);color:transparent;-webkit-text-stroke:3px rgba(255,0,0,.55);z-index:2}
+.chap .txt{position:absolute;left:150px;top:340px;z-index:4}
+.chap .txt .kicker{font-size:28px}
+.chap .txt h1{font:400 230px/.88 var(--disp);margin:26px 0 30px}
+.chap .txt p{font:400 34px/1.4 var(--body);color:#cfcac2;max-width:820px}
+.prop{position:absolute;z-index:4}
+
+/* ---------- browser collage ---------- */
+.web{background:radial-gradient(ellipse at 60% 50%,#16252b,#0a0f11 75%)}
+.bw{position:absolute;background:#f4f4f4;border-radius:12px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.65)}
+.bw .tb{height:46px;background:#e3e3e3;display:flex;align-items:center;gap:16px;padding:0 16px}
+.bw .tb i{width:13px;height:13px;border-radius:50%;background:#ff5f57;box-shadow:21px 0 #febc2e,42px 0 #28c840;margin-right:46px}
+.bw .tb span{flex:1;height:28px;border-radius:14px;background:#fff;font:400 15px/28px var(--body);color:#666;padding:0 14px;white-space:nowrap;overflow:hidden}
+.bw .bd{position:absolute;inset:46px 0 0 0;padding:22px;color:#222}
+.sk{background:#d6d6d6;border-radius:8px;height:16px;margin:10px 0}
+.lab{position:absolute;z-index:6;font:400 44px/1 var(--disp);letter-spacing:.04em;background:var(--red);color:#fff;padding:10px 18px 6px;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.lab small{font:800 15px/1 var(--body);letter-spacing:.2em;display:block;margin-bottom:6px;opacity:.85}
+.cursor{position:absolute;z-index:8;width:44px;left:0;top:0}
+.slide.active .cur-move{animation:curmove 6s ease-in-out .6s both infinite alternate}
+@keyframes curmove{0%{transform:translate(1500px,900px)}30%{transform:translate(1060px,430px)}60%{transform:translate(620px,610px)}100%{transform:translate(1380px,330px)}}
+
+/* ---------- funnel ---------- */
+.fn .stages{position:absolute;left:120px;top:370px;width:760px}
+.st{display:grid;grid-template-columns:200px 1fr;align-items:center;padding:16px 0;border-top:2px solid var(--line);opacity:.35;transition:opacity .4s}
+.st.on{opacity:1}
+.st .v{font:400 100px/1 var(--num)}
+.st.on:last-child .v{color:var(--red)}
+.st .k{font:600 30px/1.3 var(--body)}
+.fn .dots{position:absolute;left:1040px;top:250px;display:grid;grid-template-columns:repeat(10,62px);gap:14px}
+.fn .dot{height:62px;border-radius:10px;background:#e9e4da;transition:background .6s,opacity .6s,transform .6s}
+.fn .dot.out{opacity:.12;transform:scale(.8)}
+.fn .dot.keep{background:var(--red);box-shadow:0 0 24px rgba(255,0,0,.5)}
+
+/* ---------- three cards ---------- */
+.cards3{position:absolute;left:120px;right:120px;top:420px;display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+.c3{background:#151413;border:1px solid var(--line);border-radius:26px;padding:50px 46px;min-height:400px;position:relative}
+.c3 .ic{width:96px;height:96px;border-radius:24px;background:var(--red);display:grid;place-items:center;margin-bottom:44px}
+.c3 h3{font:400 78px/1 var(--disp)}
+.c3 p{font:400 24px/1.45 var(--body);color:#bdb8b0;margin-top:16px}
+
+/* ---------- evidence board ---------- */
+.board{background:#15110d;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1.5px);background-size:9px 9px}
+.case{position:absolute;z-index:2;width:400px;background:#efe8da;color:#1b1814;padding:26px 28px 30px;border-radius:4px;box-shadow:0 22px 50px rgba(0,0,0,.6);transform:rotate(var(--r))}
+.case:before{content:'';position:absolute;left:50%;top:-12px;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff6b6b,#9b0000)}
+.case .no{font:800 15px/1 var(--body);letter-spacing:.24em;color:#8a8070}
+.case h3{font:400 56px/1 var(--disp);margin:14px 0 10px}
+.case p{font:400 20px/1.4 var(--body);color:#4b443b}
+.stamp{position:absolute;right:-24px;bottom:-30px;font:400 40px/1 var(--disp);letter-spacing:.06em;color:var(--red2);border:5px solid var(--red2);padding:8px 14px 4px;border-radius:8px;transform:rotate(-10deg);background:rgba(239,232,218,.85)}
+.slide.active .stamp{animation:stamp .5s cubic-bezier(.3,1.6,.5,1) var(--d) both}
+@keyframes stamp{from{opacity:0;transform:rotate(-10deg) scale(2.4)}to{opacity:1}}
+.board svg{position:absolute;inset:0;z-index:1}
+.board .topic{position:absolute;z-index:3;left:810px;top:470px;width:300px;height:170px;background:#000;border:3px solid var(--red);display:grid;place-items:center;font:400 64px/1 var(--disp);z-index:2}
+
+/* ---------- trim ---------- */
+.pages{position:absolute;left:180px;top:390px;width:520px;height:560px}
+.pg{position:absolute;inset:0;background:#efe8da;border-radius:6px;padding:46px 40px;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.slide.active .pages .pg{animation:squash 2.2s cubic-bezier(.7,0,.3,1) var(--sq,1.2s) both}
+html.print .pages .pg{animation:none!important}
+@keyframes squash{to{transform:translate(800px,60px) scale(.18);opacity:0}}
+.phone{position:absolute;width:330px;height:640px;border-radius:46px;border:12px solid #222;background:#000;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.phone img{width:100%;height:100%;object-fit:cover}
+.phone .sbar{position:absolute;left:0;right:0;bottom:0;height:7px;background:rgba(255,255,255,.3)}
+.phone .sbar i{display:block;height:100%;background:var(--red);width:var(--w,100%)}
+.arrow{position:absolute;font:400 160px/1 var(--disp);color:var(--red)}
+
+/* ---------- hook ---------- */
+.capt{position:absolute;left:24px;right:24px;bottom:70px;text-align:center;font:800 26px/1.35 var(--body);color:#fff;text-shadow:0 2px 8px #000,0 0 2px #000}
+.capt span{background:rgba(0,0,0,.55);padding:2px 6px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.slide.active .grow-w{animation:gw 5s linear .6s both}
+@keyframes gw{from{width:0}to{width:9%}}
+.tag{display:inline-block;font:800 18px/1 var(--body);letter-spacing:.2em;background:var(--red);color:#fff;padding:9px 12px;border-radius:5px}
+.quote{font:600 40px/1.45 var(--body);margin:22px 0 10px;border-left:6px solid var(--red);padding-left:28px}
+.trans{font:400 22px/1.4 var(--body);color:var(--mute);padding-left:34px}
+.rules{display:grid;gap:16px;margin-top:40px}
+.rule{display:grid;grid-template-columns:70px 1fr;gap:20px;align-items:start}
+.rule b{font:400 56px/1 var(--num);color:var(--red)}
+.rule h4{font:400 44px/1 var(--disp);letter-spacing:.02em}
+.rule p{font:400 22px/1.4 var(--body);color:#bdb8b0;margin-top:4px}
+
+/* ---------- emotion graph ---------- */
+.eg svg{position:absolute;left:120px;top:330px;overflow:visible}
+.eg .line{fill:none;stroke:var(--red);stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 14px rgba(255,0,0,.6))}
+.slide.active .eg-draw{animation:draw 3.2s ease .4s both}
+@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+.beat{position:absolute;width:300px;transform:translateX(-50%);text-align:center}
+.beat .dt{width:26px;height:26px;border-radius:50%;background:var(--ink);border:6px solid var(--red);margin:0 auto 12px}
+.beat b{display:block;font:400 34px/1 var(--disp);letter-spacing:.04em;color:var(--gold)}
+.beat span{font:400 19px/1.35 var(--body);color:#cfcac2}
+
+/* ---------- reveal ---------- */
+.rv .track{position:absolute;left:160px;right:160px;top:640px;height:14px;background:rgba(255,255,255,.2);border-radius:7px}
+.rv .track i{position:absolute;inset:0;background:var(--red);border-radius:7px;transform-origin:left}
+.slide.active .rv-fill{animation:fill 3s ease .5s both}
+@keyframes fill{from{transform:scaleX(0)}}
+.rv .ends{position:absolute;left:160px;right:160px;top:672px;display:flex;justify-content:space-between;font:400 40px/1 var(--disp);color:var(--mute)}
+.bub{position:absolute;width:560px;background:#151413;border:2px solid var(--line);border-radius:22px;padding:30px 34px}
+.bub .tag{margin-bottom:16px}
+.bub p{font:600 34px/1.35 var(--body)}
+.bub .tr{font:400 22px/1.4 var(--body);color:var(--mute);margin-top:10px}
+.rv svg{position:absolute;inset:0;overflow:visible}
+.rv .arc{fill:none;stroke:var(--gold);stroke-width:4;stroke-dasharray:14 12}
+
+/* ---------- recording ---------- */
+.rec .me{position:absolute;right:120px;bottom:0;width:742px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 16%);mask-image:linear-gradient(90deg,transparent,#000 16%)}
+.rec .topfade{position:absolute;right:100px;top:60px;width:800px;height:160px;background:linear-gradient(var(--bg),transparent);z-index:2}
+.rec .eyebox{position:absolute;border:4px solid var(--red);border-radius:10px;box-shadow:0 0 0 2000px rgba(0,0,0,.0)}
+.rec .eyebox span{position:absolute;left:-4px;top:-44px;font:800 18px/1 var(--body);letter-spacing:.2em;background:var(--red);padding:10px 12px}
+.slide.active .scan{animation:scan 1.4s cubic-bezier(.7,0,.2,1) 1s both}
+@keyframes scan{from{opacity:0;transform:scale(1.6)}to{opacity:1;transform:none}}
+.recdot{position:absolute;z-index:6;right:70px;top:60px;font:800 24px/1 var(--body);letter-spacing:.2em;display:flex;align-items:center;gap:12px}
+.recdot:before{content:'';width:20px;height:20px;border-radius:50%;background:var(--red);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.list4{margin-top:50px;display:grid;gap:18px;width:820px}
+.list4 div{display:flex;gap:24px;align-items:center;font:600 34px/1.2 var(--body);padding:20px 26px;background:#151413;border-radius:14px;border:1px solid var(--line)}
+.list4 b{font:400 46px/1 var(--num);color:var(--red);width:50px}
+
+/* ---------- editing timeline ---------- */
+.nle{position:absolute;left:120px;top:360px;width:1060px;height:560px;background:#121212;border:1px solid #2a2a2a;border-radius:14px;overflow:hidden}
+.nle .ruler{height:44px;border-bottom:1px solid #2a2a2a;position:relative;margin-left:120px}
+.nle .ruler span{position:absolute;top:12px;font:600 15px/1 var(--body);color:#777;transform:translateX(-50%)}
+.trk{position:relative;height:110px;border-bottom:1px solid #222;margin-left:120px}
+.trk:before{content:attr(data-n);position:absolute;left:-120px;width:110px;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font:800 15px/1.2 var(--body);letter-spacing:.12em;color:#999;text-align:center;background:#181818;border-right:1px solid #2a2a2a}
+.clip{position:absolute;top:18px;bottom:18px;border-radius:8px;font:600 15px/1 var(--body);padding:10px;overflow:hidden;color:#fff}
+.clip.v{background:#3a5ccc}.clip.b{background:#c76b1a}.clip.p{background:repeating-linear-gradient(45deg,rgba(255,194,61,.25) 0 8px,transparent 8px 16px);border:2px dashed var(--gold);color:var(--gold)}
+.wave{position:absolute;inset:18px 0;display:flex;align-items:center;gap:3px}
+.wave i{flex:1;background:#2fbf71;border-radius:2px}
+.ph-line{position:absolute;top:0;bottom:0;width:3px;background:var(--red);left:120px;z-index:4}
+.ph-line:before{content:'';position:absolute;top:0;left:-9px;border-top:16px solid var(--red);border-left:10.5px solid transparent;border-right:10.5px solid transparent}
+.slide.active .play-head{animation:ph 7s linear .5s both infinite}
+@keyframes ph{to{left:1058px}}
+.cutm{position:absolute;top:-6px;bottom:-6px;width:3px;background:#fff}
+.erules{position:absolute;left:1260px;top:360px;width:540px;display:grid;gap:26px}
+.erules h4{font:400 42px/1 var(--disp);letter-spacing:.02em}
+.erules h4 b{color:var(--red);font-weight:400;margin-right:12px}
+.erules p{font:400 21px/1.4 var(--body);color:#bdb8b0;margin-top:6px}
+
+/* ---------- then / now ---------- */
+.tn{position:absolute;top:360px;width:780px;height:470px;border-radius:18px;overflow:hidden;background:#151413;border:2px solid var(--line)}
+.tn .lbl{position:absolute;left:24px;top:22px;z-index:5}
+.tn.then{left:120px}.tn.now{left:1020px;border-color:var(--red)}
+.chaos span{position:absolute;font:400 var(--s,60px)/1 var(--disp);color:var(--c,#fff);transform:rotate(var(--r));text-shadow:4px 4px 0 #000;animation:jit .25s steps(2) infinite}
+@keyframes jit{50%{transform:rotate(var(--r)) translate(4px,-3px) scale(1.04)}}
+.chaos .zl{position:absolute;inset:-50%;background:repeating-conic-gradient(rgba(255,255,255,.08) 0 2deg,transparent 2deg 9deg);animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.calm{display:grid;place-items:center;height:100%;padding:60px;text-align:center}
+.calm p{font:600 40px/1.35 var(--body)}
+.calm small{display:block;margin-top:24px;font:400 22px/1.4 var(--body);color:var(--mute)}
+.tn-cap{position:absolute;top:860px;font:600 26px/1.35 var(--body);color:#cfcac2;width:780px}
+
+/* ---------- hold ---------- */
+.soon{position:absolute;left:120px;top:330px;display:grid;grid-template-columns:repeat(3,1fr);gap:30px;right:120px}
+.soon div{border:2px dashed #4a4744;border-radius:20px;padding:40px;min-height:300px}
+.soon b{font:400 26px/1 var(--disp);letter-spacing:.2em;color:var(--gold)}
+.soon h3{font:400 60px/1 var(--disp);margin:20px 0 16px}
+.soon p{font:400 22px/1.45 var(--body);color:#bdb8b0}
+
+/* ---------- Q&A ---------- */
+.qa .big{position:absolute;left:120px;top:250px;font:400 280px/.86 var(--disp)}
+.cbox{position:absolute;left:120px;top:810px;width:1120px;display:flex;gap:24px;align-items:center}
+.cbox .av{width:72px;height:72px;border-radius:50%;overflow:hidden;background:#222;flex:none}
+.cbox .in2{flex:1;border-bottom:2px solid #6a6764;padding:14px 0;font:400 32px/1.2 var(--body);color:#9a968f}
+.cbox .in2 i{display:inline-block;width:3px;height:34px;background:#fff;vertical-align:middle;animation:blink 1s steps(2) infinite;margin-left:4px}
+.qa .credits{position:absolute;right:120px;top:0;bottom:0;width:440px;overflow:hidden;mask-image:linear-gradient(transparent,#000 20%,#000 80%,transparent)}
+.qa .roll{display:grid;grid-template-columns:1fr 1fr;gap:14px;animation:reel 40s linear infinite}
+.qa .roll div{aspect-ratio:3/4;border-radius:12px;overflow:hidden;opacity:.55}
+
+#start{position:absolute;left:0;right:0;bottom:60px;text-align:center;z-index:60;font:600 22px/1 var(--body);color:#8e8a84;letter-spacing:.06em}
+#start b{color:var(--ink)}
+html.print #start{display:none}
+
+/* print / PDF: every slide on its own page, animations at their final frame */
+@page{size:1920px 1080px;margin:0}
+html.print,html.print body{overflow:visible;height:auto;background:var(--bg)}
+html.print #view{position:static;display:block}
+html.print #stage{transform:none!important;height:auto;overflow:visible;background:none}
+html.print .slide{position:relative;width:1920px;height:1080px;opacity:1;visibility:visible;break-after:page;page-break-after:always}
+html.print *{animation-play-state:paused!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html.print .slide .in,html.print .slide .pop,html.print .slide .fade,html.print .slide .wipe,html.print .hof-t,html.print .stamp,html.print .scan,html.print .mosaic div{animation:none!important;opacity:1}
+html.print .cold-logo{display:none}
+html.print .pg-squash,html.print #vig{animation:none!important}
+html.print #vig{display:none}
+html.print .eg-draw,html.print .rv-fill,html.print .tl .b{animation:none!important}
+html.print #chrome,html.print #brand,html.print #grain{display:none}
+html.print .pchrome{display:flex}
+.pchrome{display:none;position:absolute;left:64px;right:64px;bottom:30px;justify-content:space-between;font:600 18px/1 var(--body);color:#888;z-index:45}
+</style>
+</head>
+<body>
+<div id="view"><div id="stage">
+
+<!-- 1 · COLD OPEN -->
+<section class="slide cold" data-ch="-1" data-fx="count">
+  <div class="logo cold-logo"></div>
+  <div>
+    <div class="count" data-to="17236963800" data-delay="2100">0</div>
+    <div class="lbl fade" style="--d:2.2s">Shorts views · one channel</div>
+    <div class="orig fade" style="--d:5.4s">A FACTOHOLIC ORIGINAL</div>
+  </div>
+  <div class="src small fade" style="--d:5.8s">All 1,394 FactoHolic Shorts, read from YouTube on 15 Oct 2026</div>
+</section>
+
+<!-- 2 · TITLE -->
+<section class="slide ttl" data-ch="-1">
+  <div class="top fade" style="--d:.4s">A FACTOHOLIC ORIGINAL</div>
+  <div class="strip"><div class="reel" id="reel"></div></div>
+  <div class="frame pop" style="--d:.3s"></div>
+  <div class="w w1 in" style="--d:.5s">FACT</div>
+  <div class="w w2 in" style="--d:.7s">HOLIC</div>
+  <div class="side">
+    <h2 class="in" style="--d:1s">THE YT<br>MASTERCLASS</h2>
+    <p class="in" style="--d:1.2s">How 1,394 Shorts became 17 billion views. Six chapters, one channel.</p>
+    <span class="play in" style="--d:1.4s">Play</span>
+  </div>
+</section>
+
+<!-- 3 · EPISODES -->
+<section class="slide eps" data-ch="-1">
+  <div class="head in"><div class="h" style="font-size:96px">Episodes</div><div class="small" style="font-size:24px">The YT Masterclass · Season 1</div></div>
+  <div class="grid" id="eps"></div>
+</section>
+
+<!-- 4 · WALL OF SHORTS -->
+<section class="slide wallx" data-ch="0" data-fx="wall">
+  <div class="mosaic" id="mosaic"></div>
+  <div class="wcard pop" style="--d:2.4s">
+    <div class="kicker">The channel</div>
+    <div class="big"><span class="count" data-to="1394" data-delay="2500">0</span></div>
+    <div class="t">SHORTS</div>
+    <p>These are the 180 most-watched.<br>The <b>red</b> ones passed 100M views.</p>
+  </div>
+</section>
+
+<!-- 5 · STATS -->
+<section class="slide" data-ch="0" data-fx="count">
+  <div class="pad">
+    <div class="kicker in">The channel in four numbers</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Every Short averages <em>12.4 million</em> views.</div>
+  </div>
+  <div class="tiles">
+    <div class="tile in" style="--d:.3s"><div class="v"><span class="count" data-to="22.8" data-dec="1" data-delay="400">0</span><small>M</small></div><div class="k">subscribers</div></div>
+    <div class="tile in" style="--d:.45s"><div class="v"><span class="count" data-to="1394" data-delay="500">0</span></div><div class="k">Shorts published</div></div>
+    <div class="tile in" style="--d:.6s"><div class="v"><span class="count" data-to="17.2" data-dec="1" data-delay="600">0</span><small>B</small></div><div class="k">total Shorts views</div></div>
+    <div class="tile in" style="--d:.75s"><div class="v"><span class="count" data-to="12.4" data-dec="1" data-delay="700">0</span><small>M</small></div><div class="k">average views per Short</div></div>
+  </div>
+  <div class="foot small fade" style="--d:1.4s">Source: FactoHolic's YouTube Shorts tab, 15 Oct 2026. Average = 17.24B views ÷ 1,394 Shorts.</div>
+</section>
+
+<!-- 6 · TIMELINE -->
+<section class="slide" data-ch="0">
+  <div class="pad">
+    <div class="kicker in">The long climb</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">22 months to the first <em>100M</em> Short.<br>22 more since 2024.</div>
+  </div>
+  <div class="tl">
+    <div class="cols">
+      <div class="col zero"><div class="c">0</div></div>
+      <div class="col zero"><div class="c">0</div></div>
+      <div class="col"><div class="c in" style="--d:.5s">1</div><div class="b" style="--n:1;--d:.4s"></div></div>
+      <div class="col"><div class="c in" style="--d:.7s">4</div><div class="b" style="--n:4;--d:.6s"></div></div>
+      <div class="col"><div class="c in" style="--d:.9s">15</div><div class="b" style="--n:15;--d:.8s"></div></div>
+      <div class="col"><div class="c in" style="--d:1.1s">3</div><div class="b" style="--n:3;--d:1s;opacity:.7"></div></div>
+    </div>
+    <div class="axis"><div>2021</div><div>2022</div><div>2023</div><div>2024</div><div>2025</div><div>2026*</div></div>
+  </div>
+  <div class="flag in" style="left:150px;top:470px;--d:1.3s"><b>20 May 2021</b>First Short goes up</div>
+  <div class="flag in" style="left:660px;top:600px;--d:1.5s"><b>6 Mar 2023</b>First Short past 100M<br>(105M today)</div>
+  <div class="foot small fade" style="--d:1.8s;bottom:110px">Shorts past 100M views, by upload year. *2026 = 1 Jan to 15 Oct.</div>
+</section>
+
+<!-- 7 · HALL OF FAME -->
+<section class="slide hof" data-ch="0">
+  <div id="tapes"></div>
+  <div class="center pop" style="--d:.1s">
+    <div class="big">23</div>
+    <div class="t">SHORTS PAST 100M</div>
+    <div class="s">No. 1: World's Most Expensive School<br>200M views</div>
+  </div>
+</section>
+
+<!-- 8 · DISCLAIMER -->
+<section class="slide" data-ch="0">
+  <div class="hold">HOLD · NEEDS TEXT</div>
+  <div class="rate">
+    <div class="bar wipe"></div>
+    <div>
+      <div class="box in" style="--d:.2s">U/A 13+</div>
+      <h2 class="in" style="--d:.35s;margin-top:30px">VIEWER DISCRETION</h2>
+      <p class="in" style="--d:.5s">This is my experience, not a rulebook.</p>
+      <p class="in" style="--d:.65s"><span class="ph">Disclaimer text from Speaker 1 goes here.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · CH1 CARD -->
+<section class="slide chap" data-ch="1" data-chap="01|Chapter one|The Idea|Where ideas come from, and how 100 become 20."></section>
+
+<!-- 10 · BROWSER COLLAGE -->
+<section class="slide web" data-ch="1">
+  <div class="pad" style="z-index:7">
+    <div class="kicker in">Research of topic</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Ideas come from<br><em>three</em> places.</div>
+  </div>
+  <div class="bw pop" style="left:820px;top:120px;width:860px;height:500px;--d:.3s">
+    <div class="tb"><i></i><span>youtube.com/results</span></div>
+    <div class="bd" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="background:#ddd;border-radius:10px;display:grid;place-items:center"><span class="yt"></span></div>
+      <div style="background:#ddd;border-radius:10px;display:grid;place-items:center"><span class="yt"></span></div>
+      <div style="background:#ddd;border-radius:10px;display:grid;place-items:center"><span class="yt"></span></div>
+      <div><div class="sk" style="width:90%"></div><div class="sk" style="width:60%"></div></div>
+      <div><div class="sk" style="width:80%"></div><div class="sk" style="width:50%"></div></div>
+      <div><div class="sk" style="width:85%"></div><div class="sk" style="width:55%"></div></div>
+      <div style="background:#ddd;border-radius:10px;display:grid;place-items:center"><span class="yt"></span></div>
+      <div style="background:#ddd;border-radius:10px;display:grid;place-items:center"><span class="yt"></span></div>
+      <div style="background:#ddd;border-radius:10px;display:grid;place-items:center"><span class="yt"></span></div>
+    </div>
+  </div>
+  <div class="bw pop" style="left:1430px;top:430px;width:360px;height:560px;--d:.6s">
+    <div class="tb"><i></i><span>instagram.com/reels</span></div>
+    <div class="bd" style="padding:0;background:linear-gradient(160deg,#833ab4,#fd1d1d 60%,#fcb045)">
+      <div style="position:absolute;right:20px;bottom:40px;display:grid;gap:22px;font:800 30px/1 var(--body);color:#fff">♥<br>✦<br>➤</div>
+    </div>
+  </div>
+  <div class="bw pop" style="left:520px;top:560px;width:640px;height:380px;--d:.9s">
+    <div class="tb"><i></i><span>search: anything you saw today</span></div>
+    <div class="bd"><div class="sk" style="height:46px;border-radius:23px;width:80%"></div><div class="sk" style="width:70%;margin-top:30px;background:#9bb3f0"></div><div class="sk" style="width:95%"></div><div class="sk" style="width:60%;margin-top:26px;background:#9bb3f0"></div><div class="sk" style="width:88%"></div></div>
+  </div>
+  <div class="bw pop" style="left:110px;top:560px;width:380px;height:440px;--d:1.2s;background:#efe8da">
+    <div class="tb"><i></i><span>book · chapter 4</span></div>
+    <div class="bd" style="padding:34px"><div class="sk" style="background:#cfc4ae"></div><div class="sk" style="background:#cfc4ae;width:92%"></div><div class="sk" style="background:#ffd54a;width:80%"></div><div class="sk" style="background:#cfc4ae;width:95%"></div><div class="sk" style="background:#cfc4ae;width:70%"></div><div class="sk" style="background:#cfc4ae;width:88%"></div><div class="sk" style="background:#ffd54a;width:60%"></div></div>
+  </div>
+  <div class="bw pop" style="left:1180px;top:640px;width:330px;height:330px;--d:1.5s;background:#111">
+    <div class="tb"><i></i><span>camera</span></div>
+    <div class="bd" style="background:linear-gradient(#2c3a40,#121a1d)">
+      <div style="position:absolute;inset:30px;border:3px solid rgba(255,255,255,.6);clip-path:polygon(0 0,22% 0,22% 3px,3px 3px,3px 22%,0 22%,0 78%,3px 78%,3px calc(100% - 3px),22% calc(100% - 3px),22% 100%,78% 100%,78% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 78%,100% 78%,100% 22%,calc(100% - 3px) 22%,calc(100% - 3px) 3px,78% 3px,78% 0,100% 0,0 0)"></div>
+      <div class="recdot" style="right:46px;top:46px;font-size:18px;color:#fff">REC</div>
+    </div>
+  </div>
+  <div class="lab in" style="left:1140px;top:590px;--d:1.4s"><small>01</small>OBSERVATION · DAILY LIFE</div>
+  <div class="lab in" style="left:150px;top:500px;--d:1.6s;background:#fff;color:#000"><small>02</small>BOOKS</div>
+  <div class="lab in" style="left:1040px;top:80px;--d:1.8s"><small>03</small>INTERNET · YT, INSTA, BROWSER</div>
+  <svg class="cursor cur-move" viewBox="0 0 24 24"><path d="M3 2l7 19 2.5-7.5L20 11z" fill="#fff" stroke="#000" stroke-width="1.3"/></svg>
+</section>
+
+<!-- 11 · FUNNEL -->
+<section class="slide fn" data-ch="1" data-fx="funnel">
+  <div class="pad">
+    <div class="kicker in">Selection of topic</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">100 ideas in.<br><em>20</em> videos out.</div>
+  </div>
+  <div class="stages">
+    <div class="st on"><div class="v">100</div><div class="k">topics selected</div></div>
+    <div class="st"><div class="v">50</div><div class="k">written in the notebook</div></div>
+    <div class="st"><div class="v">25</div><div class="k">marked with a star</div></div>
+    <div class="st"><div class="v">20</div><div class="k">videos finalised</div></div>
+  </div>
+  <div class="dots" id="dots"></div>
+</section>
+
+<!-- 12 · WHAT DECIDES -->
+<section class="slide" data-ch="1">
+  <div class="pad">
+    <div class="kicker in">The other 80 aren't bad topics</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Three things pick the final 20.</div>
+  </div>
+  <div class="cards3">
+    <div class="c3 in" style="--d:.3s"><div class="ic"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div><h3>Trends</h3><p>What people are already searching and sharing right now.</p></div>
+    <div class="c3 in" style="--d:.45s"><div class="ic"><svg width="52" height="52" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.6-9.5-9.1C1 8.5 3.3 5 6.8 5c2 0 3.5 1.1 5.2 3 1.7-1.9 3.2-3 5.2-3 3.5 0 5.8 3.5 4.3 6.9C19.5 16.4 12 21 12 21z"/></svg></div><h3>My taste</h3><p>Topics I would watch myself.</p></div>
+    <div class="c3 in" style="--d:.6s"><div class="ic"><svg width="52" height="52" viewBox="0 0 24 24" fill="#fff"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg></div><h3>My state of mind</h3><p>What I have the energy to make well today.</p></div>
+  </div>
+</section>
+
+<!-- 13 · CH2 CARD -->
+<section class="slide chap" data-ch="2" data-chap="02|Chapter two|The Investigation|Research about the topic: where facts come from, and what gets cut."></section>
+
+<!-- 14 · EVIDENCE BOARD -->
+<section class="slide board" data-ch="2">
+  <svg viewBox="0 0 1920 1080"><g stroke="#c4000b" stroke-width="3" fill="none"><path d="M960 555 Q700 300 430 218"/><path d="M960 555 Q1220 300 1500 218"/><path d="M960 555 Q700 640 430 678"/><path d="M960 555 Q1220 640 1500 678"/></g></svg>
+  <div class="pad" style="top:70px;left:0;right:0;text-align:center;z-index:3">
+    <div class="h in" style="font-size:96px">Where the facts come from</div>
+  </div>
+  <div class="topic pop" style="--d:.2s">THE TOPIC</div>
+  <div class="case in" style="left:230px;top:230px;--r:-3deg;--d:.4s"><div class="no">SOURCE 01</div><h3>Articles &amp; websites</h3><p>Written, checked, linkable.</p><div class="stamp" style="--d:1.2s">BEST</div></div>
+  <div class="case in" style="left:1300px;top:230px;--r:2.5deg;--d:.55s"><div class="no">SOURCE 02</div><h3>YouTube &amp; Insta videos</h3><p>See how others explained it.</p><div class="stamp" style="--d:1.4s">BEST</div></div>
+  <div class="case in" style="left:230px;top:690px;--r:2deg;--d:.7s"><div class="no">SOURCE 03</div><h3>Daily experiences</h3><p>What you have lived yourself.</p><div class="stamp" style="--d:1.6s">REAL LIFE</div></div>
+  <div class="case in" style="left:1300px;top:690px;--r:-2deg;--d:.85s"><div class="no">SOURCE 04</div><h3>AI tools</h3><p>Fast for a first pass. It can be confidently wrong.</p><div class="stamp" style="--d:1.8s">CHECK EVERY FACT</div></div>
+</section>
+
+<!-- 15 · TRIM -->
+<section class="slide" data-ch="2">
+  <div class="pad">
+    <div class="kicker in">After the research</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Research big. <em>Say it small.</em></div>
+  </div>
+  <div class="pages">
+    <div class="pg" style="--sq:1.5s;rotate:-7deg;translate:-30px 10px"></div>
+    <div class="pg" style="--sq:1.35s;rotate:4deg;translate:20px -6px"></div>
+    <div class="pg pg-squash"><div class="sk" style="background:#cfc4ae"></div><div class="sk" style="background:#cfc4ae;width:90%"></div><div class="sk" style="background:#cfc4ae;width:96%"></div><div class="sk" style="background:#cfc4ae;width:70%"></div><div class="sk" style="background:#cfc4ae;width:92%"></div><div class="sk" style="background:#cfc4ae;width:84%"></div><div class="sk" style="background:#cfc4ae;width:96%"></div><div class="sk" style="background:#cfc4ae;width:60%"></div><div class="sk" style="background:#cfc4ae;width:90%"></div><div class="sk" style="background:#cfc4ae;width:78%"></div><div class="sk" style="background:#cfc4ae;width:94%"></div><div class="sk" style="background:#cfc4ae;width:66%"></div></div>
+  </div>
+  <div class="arrow fade" style="left:790px;top:560px;--d:.6s">→</div>
+  <div class="phone pop" style="left:980px;top:360px;--d:.4s"><img src="assets/shorts/Bo5azL9dpMM.jpg"><div class="sbar"><i></i></div></div>
+  <div class="in" style="position:absolute;left:1380px;top:400px;width:420px;--d:.8s">
+    <div class="tag">56 SECONDS</div>
+    <p class="sub" style="margin-top:20px;font-size:28px">Cut big portions. Pick every word with care. Keep it simple enough for everyone.</p>
+    <p class="small" style="margin-top:24px">His No. 1 Short, World's Most Expensive School, runs 56 seconds.</p>
+  </div>
+</section>
+
+<!-- 16 · CH3 CARD -->
+<section class="slide chap" data-ch="3" data-chap="03|Chapter three|The Script|Hook, explain, punchline, reveal. Shown on one real Short."></section>
+
+<!-- 17 · HOOK -->
+<section class="slide" data-ch="3">
+  <div class="phone pop" style="left:120px;top:150px;width:420px;height:800px;--d:.1s">
+    <img src="assets/shorts/Bo5azL9dpMM.jpg">
+    <div class="capt in" style="--d:.8s"><span>यह है दुनिया का सबसे महंगा स्कूल, जिसकी साल भर की फीस सुनके तुम्हारी फट जाएगी आंखें।</span></div>
+    <div class="sbar"><i class="grow-w" style="width:9%"></i></div>
+  </div>
+  <div style="position:absolute;left:660px;top:150px;width:1140px">
+    <div class="kicker in">Scripting · the hook</div>
+    <div class="h in" style="--d:.15s;margin-top:24px;font-size:96px">Five seconds to stop the scroll.</div>
+    <div class="in" style="--d:.4s;margin-top:40px"><span class="tag">HOOK · 0:00 TO 0:05</span></div>
+    <div class="quote in" style="--d:.5s">"This is the world's most expensive school. Hear its yearly fee and your eyes will pop."</div>
+    <div class="trans in" style="--d:.6s">World's Most Expensive School · 200M views · opening line, translated</div>
+    <div class="rules">
+      <div class="rule in" style="--d:.8s"><b>1</b><div><h4>Hook</h4><p>Visual, audio or spoken. Make them stop. Never clickbait.</p></div></div>
+      <div class="rule in" style="--d:.95s"><b>2</b><div><h4>Explain from zero</h4><p>Start from the basics. Don't act too smart. Relate to the viewer.</p></div></div>
+      <div class="rule in" style="--d:1.1s"><b>3</b><div><h4>Simple language</h4><p>No heavy words. Use examples of famous people. Be relatable.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 18 · EMOTION GRAPH -->
+<section class="slide eg" data-ch="3" data-fx="graph">
+  <div class="pad" style="top:90px">
+    <div class="kicker in">Scripting · the emotion graph</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Keep the feeling <em>moving.</em></div>
+  </div>
+  <svg width="1680" height="480" viewBox="0 0 1680 480" id="egsvg">
+    <line x1="0" y1="480" x2="1680" y2="480" stroke="#3a3836" stroke-width="3"/>
+    <path class="line eg-draw" id="egpath"/>
+  </svg>
+  <div id="beats"></div>
+  <div class="small fade" style="position:absolute;right:120px;top:150px;width:520px;text-align:right;--d:2.8s">Beats and times from the Short's own captions. Line height is illustrative, not measured.</div>
+</section>
+
+<!-- 19 · REVEAL -->
+<section class="slide rv" data-ch="3">
+  <div class="pad" style="top:90px">
+    <div class="kicker in">Scripting · reveal and twist</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Ask in second one. <em>Answer at the end.</em></div>
+  </div>
+  <svg viewBox="0 0 1920 1080"><path class="arc fade" style="--d:2.4s" d="M180 600 C 600 360, 1320 360, 1680 600"/></svg>
+  <div class="bub in" style="left:120px;top:370px;--d:.5s;width:520px"><span class="tag">0:00 · THE QUESTION</span><p>How much is the fee?</p><div class="tr">Planted in the hook, left open.</div></div>
+  <div class="bub in" style="left:1240px;top:370px;--d:2.8s;width:560px;border-color:var(--red)"><span class="tag">0:51 · THE ANSWER</span><p>About ₹1.3 crore a year.</p><div class="tr">"लगभग 1 करोड़ 30 लाख", the last line of the Short.</div></div>
+  <div class="track"><i class="rv-fill"></i></div>
+  <div class="ends"><span>0:00</span><span>everything else, explained in between</span><span>0:56</span></div>
+  <div class="foot in" style="--d:3.2s;bottom:140px"><p class="sub">People forget the middle. They remember how it ends, so end on the answer or a twist.</p></div>
+</section>
+
+<!-- 20 · CH4 CARD -->
+<section class="slide chap" data-ch="4" data-chap="04|Chapter four|The Performance|Recording is acting. You don't need expensive gear.">
+  <div class="prop pop" style="left:1420px;top:640px;--d:.6s">
+    <svg width="420" height="380" viewBox="0 0 420 380"><g transform="rotate(-14 10 110)"><rect x="10" y="70" width="400" height="56" fill="#f4f1ea"/><g fill="#0a0a0a"><path d="M40 70h50l-30 56H10z"/><path d="M140 70h50l-30 56h-50z"/><path d="M240 70h50l-30 56h-50z"/><path d="M340 70h50l-30 56h-50z"/></g></g><rect x="10" y="130" width="400" height="240" fill="#151413" stroke="#f4f1ea" stroke-width="6"/><text x="40" y="210" fill="#f4f1ea" font-family="Bebas Neue" font-size="54">SCENE 04</text><text x="40" y="290" fill="#ff0000" font-family="Bebas Neue" font-size="54">TAKE 1</text></svg>
+  </div>
+</section>
+
+<!-- 21 · RECORDING -->
+<section class="slide rec" data-ch="4">
+  <div class="recdot fade" style="--d:.2s">REC</div>
+  <img class="me fade" src="assets/closeup_cut.png" style="--d:.1s"><div class="topfade"></div>
+  <div class="eyebox scan" style="left:1310px;top:420px;width:470px;height:140px"><span>EYES</span></div>
+  <div class="pad">
+    <div class="kicker in">Recording</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">It's acting.<br>The <em>eyes</em> give it away.</div>
+    <div class="list4">
+      <div class="in" style="--d:.4s"><b>1</b>We take it for granted</div>
+      <div class="in" style="--d:.55s"><b>2</b>Keep the energy and excitement up</div>
+      <div class="in" style="--d:.7s"><b>3</b>Way of speaking, pauses, tone</div>
+      <div class="in" style="--d:.85s"><b>4</b>Expressions</div>
+    </div>
+    <p class="sub in" style="--d:1.1s;margin-top:40px;font-size:26px;width:820px">No top-tier camera needed. What matters is how good an actor you are.</p>
+  </div>
+</section>
+
+<!-- 22 · CH5 CARD -->
+<section class="slide chap" data-ch="5" data-chap="05|Chapter five|The Cut|Edit for the story. Every cut and every pause has a job."></section>
+
+<!-- 23 · EDITING TIMELINE -->
+<section class="slide" data-ch="5">
+  <div class="pad" style="top:90px">
+    <div class="kicker in">Editing</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Cut for the story, <em>not the effects.</em></div>
+  </div>
+  <div class="nle in" style="--d:.3s">
+    <div class="ruler"><span style="left:0">0:00</span><span style="left:25%">0:14</span><span style="left:50%">0:28</span><span style="left:75%">0:42</span><span style="left:calc(100% - 30px)">0:56</span></div>
+    <div class="trk" data-n="B-ROLL"><div class="clip b" style="left:22%;width:9%">school</div><div class="clip b" style="left:40%;width:8%">sports</div><div class="clip b" style="left:66%;width:10%">Paris trip</div></div>
+    <div class="trk" data-n="STORY"><div class="clip v" style="left:0;width:100%">one take, simple edit</div><div class="cutm" style="left:9%"></div><div class="cutm" style="left:24%"></div><div class="cutm" style="left:41%"></div><div class="cutm" style="left:58%"></div><div class="cutm" style="left:79%"></div><div class="cutm" style="left:91%"></div></div>
+    <div class="trk" data-n="VOICE"><div class="wave" id="wave"></div></div>
+    <div class="trk" data-n="PROCESS TIME"><div class="clip p" style="left:27%;width:6%">pause</div><div class="clip p" style="left:84%;width:6%">pause</div></div>
+    <div class="ph-line play-head"></div>
+  </div>
+  <div class="erules">
+    <div class="in" style="--d:.5s"><h4><b>01</b>Edit as simple as possible</h4><p>Don't over-edit. Stick to the storyline. It should look effortless.</p></div>
+    <div class="in" style="--d:.65s"><h4><b>02</b>Cuts and pauses</h4><p>Give sentences room. The timing of each cut matters a lot.</p></div>
+    <div class="in" style="--d:.8s"><h4><b>03</b>Super relevant clips</h4><p>B-roll that explains the line. Seeing beats hearing.</p></div>
+    <div class="in" style="--d:.95s"><h4><b>04</b>Process timing</h4><p>After a heavy point, a punchline or a joke, give the brain time to land it.</p></div>
+  </div>
+</section>
+
+<!-- 24 · THEN / NOW -->
+<section class="slide" data-ch="5">
+  <div class="pad" style="top:90px">
+    <div class="kicker in">Editing · the MrBeast shift</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Even MrBeast traded effects for <em>story.</em></div>
+  </div>
+  <div class="tn then chaos in" style="--d:.3s">
+    <div class="zl"></div>
+    <div class="tag lbl" style="background:#444">THEN</div>
+    <span style="left:70px;top:120px;--r:-12deg;--s:90px;--c:var(--gold)">WOW!!</span>
+    <span style="left:380px;top:80px;--r:9deg;--s:70px;--c:var(--red)">ZOOM</span>
+    <span style="left:240px;top:250px;--r:-4deg;--s:110px">BOOM</span>
+    <span style="left:520px;top:300px;--r:14deg;--s:60px;--c:var(--blue)">$$$</span>
+    <span style="left:60px;top:340px;--r:6deg;--s:56px;--c:#7CFC00">SWOOSH</span>
+    <span style="left:560px;top:170px;--r:-18deg;--s:50px;--c:#ff6bd6">!!!</span>
+  </div>
+  <div class="tn now in" style="--d:.5s">
+    <div class="tag lbl">NOW</div>
+    <div class="calm"><div><p>Still fast. Every effect serves the story.</p><small>So it doesn't feel heavy on the brain.</small></div></div>
+  </div>
+  <div class="tn-cap in" style="left:120px;--d:.7s">Very fast, effects everywhere.</div>
+  <div class="tn-cap in" style="left:1020px;--d:.9s">For about the last year: the edit follows the storyline. Only effects that help the story stay.</div>
+</section>
+
+<!-- 25 · CH6 CARD -->
+<section class="slide chap" data-ch="6" data-chap="06|Chapter six|The Algorithm|You've won Instagram. YouTube plays a different game."></section>
+
+<!-- 26 · CH6 HOLD -->
+<section class="slide" data-ch="6">
+  <div class="hold">HOLD · WAITING ON VOICE NOTE</div>
+  <div class="pad">
+    <div class="kicker in">Chapter six · in production</div>
+    <div class="h in" style="--d:.15s;margin-top:24px">Coming next</div>
+  </div>
+  <div class="soon">
+    <div class="in" style="--d:.3s"><b>SLIDE 1</b><h3>Two different games</h3><p>Instagram rewards shareable and relatable. YouTube rewards value. Example: the leg-lengthening surgery video.</p></div>
+    <div class="in" style="--d:.45s"><b>SLIDE 2</b><h3>Shorts vs long-form</h3><p>Shorts: tags, hashtags, titles, thumbnails aren't major factors. Long-form: titles and thumbnails matter.</p></div>
+    <div class="in" style="--d:.6s"><b>SLIDE 3</b><h3>YouTube growth hacks</h3><p>From Speaker 1's voice note.</p></div>
+  </div>
+</section>
+
+<!-- 27 · Q&A -->
+<section class="slide qa" data-ch="7">
+  <div class="credits"><div class="roll" id="roll"></div></div>
+  <div class="kicker fade" style="position:absolute;left:120px;top:190px">Post-credits scene</div>
+  <div class="big in" style="--d:.2s">ANY<br>QUESTIONS?</div>
+  <div class="cbox in" style="--d:.6s"><div class="av"><img src="assets/closeup.jpg" style="width:100%;height:100%;object-fit:cover"></div><div class="in2">Add a comment<i></i></div></div>
+</section>
+
+<div id="brand"><span class="yt"></span>FACTOHOLIC · YT MASTERCLASS</div>
+<div id="chrome"><div id="bar"></div><div id="meta"><span id="cname"></span><span id="pos"></span></div></div>
+<div id="vig"></div><div id="grain"></div>
+<div id="start">Press <b>Space</b> or click to start · <b>F</b> full screen</div>
+</div></div>
+
+<script>
+// Shorts past 80M views: [video id, views in millions], read from YouTube 15 Oct 2026
+const SHORTS=[["Bo5azL9dpMM",200],["NOR50bk6BV0",185],["DvMF4XQS8RU",167],["dVhyG6L77BI",166],["2sWKYkBjefA",163],["k_XPpYq4Ip8",162],["yz4Za0_bUy4",151],["FpRQemW2oVc",150],["MOpGeCUpON8",145],["nmY_PlvpW-s",143],["sCQMnLWfusM",140],["DkHfGGiQO2Q",135],["UGtzme_aBNY",130],["Hu70o9IV8y8",123],["vQMvEQR5sTA",118],["A7ef59TX3Uo",113],["vZMHJc9eP8M",111],["VLe96XpZYlU",109],["4yERh79FDjo",107],["Fo6ImfpFymU",105],["mCYcvyY1jJY",104],["D5tJ1a0doVs",104],["aCbsjSTnpeA",102],["ly0O0yhPfJw",97],["1CXbPbHvxW0",94],["fBvC-NlUr18",93],["2ovqvvigTds",93],["ybLGDvHBO4k",93],["9gpHeZq3aLA",92],["cNfZNBBbWJI",91],["2mNArysePAc",89],["ltG0bcvxE4E",89],["he7r7jXDl1w",89],["Yth2mOMjzgE",85],["c3SliHVEu0E",82],["4jyR0RXaXXU",82],["kCgN9x11UGA",82],["uGmL9prQSXY",82],["o6vTOrB9zZQ",81],["Q-bLstJkghk",80]];
+// 200 most-watched Shorts (ids only), read from YouTube 15 Oct 2026; thumbnails in assets/s and assets/g
+const ALL=["Bo5azL9dpMM", "NOR50bk6BV0", "DvMF4XQS8RU", "dVhyG6L77BI", "2sWKYkBjefA", "k_XPpYq4Ip8", "yz4Za0_bUy4", "FpRQemW2oVc", "MOpGeCUpON8", "nmY_PlvpW-s", "sCQMnLWfusM", "DkHfGGiQO2Q", "UGtzme_aBNY", "Hu70o9IV8y8", "vQMvEQR5sTA", "A7ef59TX3Uo", "vZMHJc9eP8M", "VLe96XpZYlU", "4yERh79FDjo", "Fo6ImfpFymU", "mCYcvyY1jJY", "D5tJ1a0doVs", "aCbsjSTnpeA", "ly0O0yhPfJw", "1CXbPbHvxW0", "fBvC-NlUr18", "2ovqvvigTds", "ybLGDvHBO4k", "9gpHeZq3aLA", "cNfZNBBbWJI", "2mNArysePAc", "ltG0bcvxE4E", "he7r7jXDl1w", "Yth2mOMjzgE", "c3SliHVEu0E", "4jyR0RXaXXU", "kCgN9x11UGA", "uGmL9prQSXY", "o6vTOrB9zZQ", "Q-bLstJkghk", "7_uJOHx1B5U", "yIarhy6z-es", "Mkwui0uozkk", "Fkc9loIxLdQ", "4THM66Gv8vE", "m0L84eD00Tg", "QMosmZjQ4Yg", "rTof9N8LsBQ", "FR_uvDhf5fE", "MacLh705yGs", "ihs09cIZKC4", "oIgB5TqIDAw", "KaxkPf-X2GE", "vELbVtKGCxw", "DTvqFhQBR2k", "W_ihLcZEZok", "3Xbf42S8u3o", "WLhhQABtAks", "yMK0aL3fzGI", "blrilrxRtws", "lqSSZ0dKFj4", "Fxp_LO0LB2A", "4vI-eoxB-Q8", "mvbAxNAY4wQ", "3tvPdCNSYZc", "4K7JScx2BVA", "nGxRNQEb4xA", "WBMsgpkVhjU", "0a-Ipsy4GDs", "o93S_5OR4bQ", "9_ELZzA-waU", "cxtIyTww1CU", "2hk5xE8nRkY", "9wS67ifs_Xk", "itmCj75rFa8", "GYOs2BwVxrg", "saOZrCX2Rxg", "r1s0Al8NSmA", "MMo8mgzFhy0", "gO1g-I3p8VU", "YVX0C8DEggk", "irjtqa_ADgA", "hmfsxpA_Amw", "nICf6ZtexEI", "PESHoUUXjAM", "teT0IhzZtZY", "MPOtN0PVdOw", "bf2KYM4FKJs", "cPewrJUK_2k", "HWgOoFOSgKE", "FwuNeosld3Y", "t7k7WPGMN_g", "X7BNGmCsXVY", "D0051lLq7X0", "0dzoJgtBQwQ", "aS1US5dhyWA", "rPgVQDdQ9Dw", "kNzwqM_dYNA", "y6dxlvkDFEk", "b_yWmrQujis", "cFoNR79QQzA", "J8wgKBXE77Q", "av-5jRrz6sk", "QtMLiNG08G4", "1khRMI49l7A", "lgqhBG3czSk", "D1TznNGnb90", "gdhL6w3hs0I", "zE1pGmSbtAc", "prbw41LHTqg", "QLT6lyDVqz8", "DiqwihJ-ObA", "sEddqrssHoA", "LPW84GbwplY", "mr0KnlIF294", "AkXBRJGMkSA", "Yld2TNWjGvY", "QMo6JWy1IHg", "cheZmAzbJME", "GclBU-_hReo", "3CGI04KITMI", "32Bal3xZ0bk", "KUAZBf_lqFI", "4QNgBRFFUuo", "UuEeWngFh2k", "40LUbLAnL-g", "S1NcCqEVqoM", "TaY1KtJotp4", "sM0IkyYWLNA", "3CRJKg3kutU", "exKfYWZDt1Y", "kb0wxnlkK1c", "kj2WfGiRC0s", "5ZEa8GeSrVI", "73YP32QHShU", "Urr-MTMM5cs", "jPCSPRZcY0g", "kPklW-qSo-s", "uAsiySZ5c8g", "b_6udlYE0So", "HzvtEfdu6T4", "oJEIdjyPGls", "Xow2c5apRZk", "Zvfnuodlojk", "HoZm7j-4UpY", "K44cKlqjElo", "6WDYq6joFFc", "E8VCfq61AF0", "Eqkyz91hG7E", "J7Es3CGz_W0", "8WZkCey0g5A", "BLzmfaeRn30", "oyu8HZWueo8", "Q3h1GgwUOlo", "ZOZh0pSLDuA", "k3175t9udxQ", "ak_1kQpAHiw", "k5vT2PRgmAM", "wJ1F_Qvo7a4", "-aRzky-mFBc", "NkW4KFfxacY", "a5_h0QGWEJ8", "9zoO7XffJ_U", "uVMXvq51LyY", "e5RIH0E4q2o", "MN762fllOOw", "bDCnx0_AuFA", "6vCyVvAVw7E", "lEhnvzT2WSw", "8gIRdbDG6bM", "7q9FdqHfB8E", "FwyU0yV-600", "w0qJYAqyqrE", "em2siAOA0ak", "cdghFo1-U5Y", "jS1UWaZOsOQ", "mgqByO58Juw", "xrKGzAyCIzI", "_00KO0z90_A", "tJ2nrgUMWy8", "zBRT6Y4jSjs", "ajj8roMSkYs", "-Dc5dxFujSk", "CBw0stCGYrc", "LardGqn3IUQ", "L4I3NtaM_OA", "ZavJMePV2WU", "BPswRq73Mbk", "zwin-uffWCM", "9KBVPZEHMjE", "_TNI_bKoZww", "TjZncBKnEtA", "pTXefzFCzTI", "EpG9ae1Yd6I", "-NLAXaffOJs", "1_D-pJEI6_A", "H7u6nQNjs-w", "8cNr_G6jrXU", "U3vJHN-X1lA", "TRXWEiGJUQI"];
+const T=id=>`assets/s/${id}.jpg`, G=id=>`assets/g/${id}.jpg`;
+const PRINT=location.search.includes('print');
+if(PRINT) document.documentElement.classList.add('print');
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+
+// title strip: two copies for a seamless loop
+const COLORS=['#ff0000','#f4f1ea','#3ea6ff','#ffc23d'];
+const strip=ALL.filter((_,i)=>i%5==0).slice(0,24).map((id,i)=>`<div style="--c:${COLORS[i%4]}"><img class="th" src="${T(id)}"></div>`).join('');
+$('#reel').innerHTML=strip+strip;
+
+// episode list
+const EPS=[["0","The Man Behind 22.8M","Who FactoHolic is, and what 17 billion views look like.","NOR50bk6BV0"],
+["1","The Idea","Where ideas come from, and how 100 become 20.","2sWKYkBjefA"],
+["2","The Investigation","Research: where facts come from, and what gets cut.","DvMF4XQS8RU"],
+["3","The Script","Hook, explain, punchline, reveal.","k_XPpYq4Ip8"],
+["4","The Performance","Recording is acting.","FpRQemW2oVc"],
+["5","The Cut","Editing for the story.","MOpGeCUpON8"],
+["6","The Algorithm","YouTube vs Instagram, and how YouTube grows.","nmY_PlvpW-s"],
+["?","Post-credits","Your questions.","sCQMnLWfusM"]];
+$('#eps').innerHTML=EPS.map((e,i)=>`<div class="ep in ${i==0?'now':''}" style="--d:${.15+i*.08}s"><div class="n">${e[0]}</div><div class="pic">${[0,1,2].map(j=>`<img src="${T(ALL[24+i*17+j*5])}">`).join('')}${i==0?'<div class="pb"><i></i></div>':''}</div><div><h3>${e[1]}</h3><p>${e[2]}</p></div></div>`).join('');
+
+// wall of Shorts: 180 most-watched, shuffled so the 100M ones are spread out
+const TOP23=new Set(SHORTS.slice(0,23).map(s=>s[0]));
+const wall=ALL.slice(0,180).map(id=>[id,rnd()]).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);
+$('#mosaic').innerHTML=wall.map((id,i)=>`<div class="${TOP23.has(id)?'hit':''}" style="--d:${(rnd()*1.6).toFixed(2)}s;--r:${((rnd()-.5)*30).toFixed(0)}deg"><img src="${T(id)}"></div>`).join('');
+
+// hall of fame: 23 tapes on an ellipse around the centre card
+$('#tapes').innerHTML=SHORTS.slice(0,23).map((s,i)=>{
+  const a=-Math.PI/2+i/23*Math.PI*2, x=960+Math.cos(a)*690-88, y=500+Math.sin(a)*340-131;
+  const r=(rnd()-.5)*26, z=Math.round(rnd()*30);
+  return `<div class="tape hof-t" style="left:${x}px;top:${y}px;transform:rotate(${r}deg);z-index:${z};--d:${.2+i*.05}s;--fx:${960-x-88}px;--fy:${500-y-131}px"><img src="${T(s[0])}"><span><b>▶ ${s[1]}M</b>SHORTS</span></div>`;
+}).join('');
+
+// chapter cards
+$$('.chap[data-chap]').forEach((el,k)=>{
+  const [n,kick,title,line]=el.dataset.chap.split('|');
+  const pick=ALL.slice(40+k*26).concat(ALL).slice(0,60);  // a different run of Shorts behind every chapter
+  el.insertAdjacentHTML('afterbegin',`<div class="wall chap-wall">${pick.map(id=>`<div><img class="th" src="${G(id)}"></div>`).join('')}</div><div class="shade"></div><div class="lb lb1 chap-lb1"></div><div class="lb lb2 chap-lb2"></div><div class="num fade" style="--d:.3s">${n}</div><div class="txt"><div class="kicker in" style="--d:.5s">${kick}</div><h1 class="in" style="--d:.65s${title.length>10?';font-size:170px':''}">${title}</h1><p class="in" style="--d:.9s">${line}</p></div>`);
+});
+
+// funnel dots: which tiles survive each stage (fixed, so every run looks the same)
+const order=[...Array(100).keys()].sort(()=>rnd()-.5);
+const stageOf=i=>{const r=order.indexOf(i);return r<20?4:r<25?3:r<50?2:1};
+$('#dots').innerHTML=[...Array(100)].map((_,i)=>`<div class="dot" data-s="${stageOf(i)}"></div>`).join('');
+
+// editing waveform
+$('#wave').innerHTML=[...Array(120)].map((_,i)=>{const p=i/120,gap=(p>.27&&p<.33)||(p>.84&&p<.9);return `<i style="height:${gap?4:20+Math.round(rnd()*70)}%"></i>`}).join('');
+
+// credits roll on Q&A
+const roll=ALL.slice(100,130).map(id=>`<div><img class="th" src="${T(id)}"></div>`).join('');$('#roll').innerHTML=roll+roll;
+
+// emotion graph: beats from the Short's captions (seconds), heights illustrative
+const BEATS=[[0,.78,"Hook","0:00 · the fee will pop your eyes"],[13,.86,"Joke","0:13 · not the chewing-gum-under-the-bench kids"],[21,.92,"Wow","0:21 · you're in the top 0.01%"],[45,.88,"Joke","0:45 · our school trip: the park next door"],[52,1,"Reveal","0:52 · about ₹1.3 crore a year"]];
+const PTS=[[0,.78],[6,.45],[13,.86],[17,.5],[21,.92],[27,.55],[34,.62],[40,.5],[45,.88],[49,.6],[52,1],[56,.9]];
+const X=s=>s/56*1680, Y=v=>480-v*430;
+(function(){let d=`M${X(PTS[0][0])},${Y(PTS[0][1])}`;
+  for(let i=0;i<PTS.length-1;i++){const p0=PTS[i-1]||PTS[i],p1=PTS[i],p2=PTS[i+1],p3=PTS[i+2]||p2;
+    d+=` C${X(p1[0])+(X(p2[0])-X(p0[0]))/6},${Y(p1[1])+(Y(p2[1])-Y(p0[1]))/6} ${X(p2[0])-(X(p3[0])-X(p1[0]))/6},${Y(p2[1])-(Y(p3[1])-Y(p1[1]))/6} ${X(p2[0])},${Y(p2[1])}`}
+  const p=$('#egpath');p.setAttribute('d',d);const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.setProperty('--len',L);
+  // dot on the curve, dashed drop to the axis, label under the axis (two rows so close beats don't collide)
+  $('#beats').innerHTML=BEATS.map((b,i)=>{const x=120+X(b[0]),y=330+Y(b[1]),row=i%2?80:0;
+    return `<div class="fade" style="--d:${.8+i*.5}s"><div style="position:absolute;left:${x-13}px;top:${y-13}px;width:26px;height:26px;border-radius:50%;background:var(--ink);border:6px solid var(--red);z-index:3"></div><div style="position:absolute;left:${x-1}px;top:${y+13}px;height:${810-y-13+row+14}px;border-left:2px dashed rgba(244,241,234,.35)"></div><div class="beat" style="left:${Math.min(Math.max(x,230),1690)}px;top:${822+row}px"><b>${b[2]}</b><span>${b[3]}</span></div></div>`}).join('');
+})();
+
+// ---------- engine ----------
+const slides=$$('.slide');
+const CH=["The Man Behind 22.8M","The Idea","The Investigation","The Script","The Performance","The Cut","The Algorithm","Post-credits"];
+const chs=[...new Set(slides.map(s=>+s.dataset.ch).filter(c=>c>=0))];
+$('#bar').innerHTML=chs.map(c=>`<div class="seg" style="--w:${slides.filter(s=>+s.dataset.ch==c).length}"><i></i></div>`).join('');
+let cur=0, timers=[];
+
+function countUp(el,instant){
+  const to=+el.dataset.to, dec=+(el.dataset.dec||0), dur=2600, delay=+(el.dataset.delay||0);
+  const fmt=v=>dec?v.toFixed(dec):Math.round(v).toLocaleString('en-US');
+  if(instant){el.textContent=fmt(to);return}
+  el.textContent=fmt(0);
+  timers.push(setTimeout(()=>{const t0=performance.now();
+    (function f(t){const p=Math.min(1,(t-t0)/dur);el.textContent=fmt(to*(1-Math.pow(1-p,4)));if(p<1&&el.closest('.slide')===slides[cur])requestAnimationFrame(f)})(t0)},delay));
+}
+function funnel(s,instant){
+  const dots=s.querySelectorAll('.dot'), st=s.querySelectorAll('.st');
+  const step=k=>{dots.forEach(d=>{const v=+d.dataset.s;d.classList.toggle('out',v<k);d.classList.toggle('keep',k==4&&v==4)});st.forEach((e,i)=>e.classList.toggle('on',i<k))};
+  if(instant){step(4);return}
+  step(1);[2,3,4].forEach((k,i)=>timers.push(setTimeout(()=>step(k),1400+i*1300)));
+}
+// music: full on the cold open, title, agenda, chapter cards and Q&A; silent under the talking slides
+const music=$('#music'); let musicOn=true, started=false, fadeT;
+const loud=s=>+s.dataset.ch<0||s.classList.contains('chap')||+s.dataset.ch==7;
+function setMusic(){if(!music)return; const to=musicOn&&loud(slides[cur])?.55:0; clearInterval(fadeT);
+  fadeT=setInterval(()=>{const v=music.volume+Math.sign(to-music.volume)*.025; if(Math.abs(to-music.volume)<.03){music.volume=to;clearInterval(fadeT)}else music.volume=Math.min(1,Math.max(0,v))},40)}
+function start(){started=true; $('#start').style.display='none'; if(music){music.volume=0; music.play().catch(()=>{})} go(cur)}
+function wallFx(s,instant){s.classList.toggle('lit',instant); if(!instant) timers.push(setTimeout(()=>s.classList.add('lit'),2300))}
+
+function enter(s,instant){
+  s.querySelectorAll('.count').forEach(e=>countUp(e,instant));
+  if(s.dataset.fx=='funnel') funnel(s,instant);
+  if(s.dataset.fx=='wall') wallFx(s,instant);
+}
+function go(i){
+  i=Math.max(0,Math.min(slides.length-1,i)); timers.forEach(clearTimeout); timers=[];
+  slides[cur].classList.remove('active'); cur=i; const s=slides[cur];
+  void s.offsetWidth; s.classList.add('active'); enter(s,false);
+  const c=+s.dataset.ch; $('#chrome').classList.toggle('hide',c<0); $('#brand').classList.toggle('hide',c<0||s.classList.contains('chap')||s.classList.contains('wallx'));
+  $$('#bar .seg').forEach((seg,k)=>{const ch=chs[k],mine=slides.filter(x=>+x.dataset.ch==ch),idx=mine.indexOf(s);
+    seg.querySelector('i').style.setProperty('--p',ch<c?1:ch>c?0:(idx+1)/mine.length)});
+  $('#cname').innerHTML=c>=0?(c<7?`<b>CHAPTER ${c}</b>`:'<b>END</b>')+CH[c]:'';
+  $('#pos').textContent=`${cur+1} / ${slides.length}`;
+  history.replaceState(null,'','#'+(cur+1));
+  if(started) setMusic();
+}
+function fit(){const k=Math.min(innerWidth/1920,innerHeight/1080);$('#stage').style.transform=`scale(${k})`}
+
+if(PRINT){
+  slides.forEach((s,i)=>{s.classList.add('active');enter(s,true);
+    const c=+s.dataset.ch; if(c>=0) s.insertAdjacentHTML('beforeend',`<div class="pchrome"><span>${c<7?'CHAPTER '+c+' · ':''}${CH[c]}</span><span>${i+1} / ${slides.length}</span></div>`)});
+}else{
+  addEventListener('resize',fit); fit();
+  addEventListener('keydown',e=>{
+    if(!started&&e.key!='f'&&e.key!='F'){e.preventDefault();start();return}
+    if(e.key=='m'||e.key=='M'){musicOn=!musicOn;setMusic();return}
+    if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
+    else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1)}
+    else if(e.key=='Home')go(0); else if(e.key=='End')go(slides.length-1);
+    else if(e.key=='f'||e.key=='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+  });
+  addEventListener('click',e=>started?go(e.clientX<innerWidth/4?cur-1:cur+1):start());
+  cur=Math.max(0,Math.min(slides.length-1,(parseInt(location.hash.slice(1))||1)-1));
+  $('#chrome').classList.add('hide'); $('#brand').classList.add('hide');
+}
+</script>
+</body>
+</html>
