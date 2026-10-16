@@ -15,8 +15,8 @@
   --disp:'Bebas Neue',Impact,sans-serif;--num:'Anton',Impact,sans-serif;--body:'Inter',system-ui,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#000;color:var(--ink);font-family:var(--body);overflow:hidden}
-#view{position:fixed;inset:0;display:grid;place-items:center}
-#stage{width:1920px;height:1080px;position:relative;transform-origin:center;background:var(--bg);overflow:hidden}
+#view{position:fixed;inset:0;overflow:hidden}
+#stage{width:1920px;height:1080px;position:absolute;left:0;top:0;transform-origin:0 0;background:var(--bg);overflow:hidden}
 .slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s .6s;overflow:hidden;background:var(--bg)}
 .slide.active{opacity:1;visibility:visible;transition:opacity .6s ease}
 img{display:block}
@@ -373,8 +373,8 @@ html.print #start{display:none}
 /* print / PDF: every slide on its own page, animations at their final frame */
 @page{size:1920px 1080px;margin:0}
 html.print,html.print body{overflow:visible;height:auto;background:var(--bg)}
-html.print #view{position:static;display:block}
-html.print #stage{transform:none!important;height:auto;overflow:visible;background:none}
+html.print #view{position:static;display:block;overflow:visible}
+html.print #stage{position:static;transform:none!important;height:auto;overflow:visible;background:none}
 html.print .slide{position:relative;width:1920px;height:1080px;opacity:1;visibility:visible;break-after:page;page-break-after:always}
 html.print *{animation-play-state:paused!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 html.print .slide .in,html.print .slide .pop,html.print .slide .fade,html.print .slide .wipe,html.print .hof-t,html.print .stamp,html.print .scan,html.print .mosaic div{animation:none!important;opacity:1}
@@ -481,14 +481,12 @@ html.print .pchrome{display:flex}
 
 <!-- 8 · DISCLAIMER -->
 <section class="slide" data-ch="0">
-  <div class="hold">HOLD · NEEDS TEXT</div>
   <div class="rate">
     <div class="bar wipe"></div>
     <div>
       <div class="box in" style="--d:.2s">U/A 13+</div>
       <h2 class="in" style="--d:.35s;margin-top:30px">VIEWER DISCRETION</h2>
       <p class="in" style="--d:.5s">This is my experience, not a rulebook.</p>
-      <p class="in" style="--d:.65s"><span class="ph">Disclaimer text from Speaker 1 goes here.</span></p>
     </div>
   </div>
 </section>
@@ -889,7 +887,7 @@ function go(i){
   history.replaceState(null,'','#'+(cur+1));
   if(started) setMusic();
 }
-function fit(){const k=Math.min(innerWidth/1920,innerHeight/1080);$('#stage').style.transform=`scale(${k})`}
+function fit(){const k=Math.min(innerWidth/1920,innerHeight/1080);$('#stage').style.transform=`translate(${(innerWidth-1920*k)/2}px,${(innerHeight-1080*k)/2}px) scale(${k})`}
 
 if(PRINT){
   slides.forEach((s,i)=>{s.classList.add('active');enter(s,true);
